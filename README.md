@@ -37,6 +37,25 @@ fun Modifier.pointerMotionEventList(
 ) 
 ```
 
+`PointerInputChange` down and move events should be consumed if you need to prevent other gestures
+like **scroll** or other **pointerInput**s to not intercept your gesture
+
+```
+        val dragModifier = Modifier.pointerMotionEvents(
+            onDown = {
+                // When down is consumed
+                it.consumeDownChange()
+            },
+            onMove = {
+            // Consuming move prevents scroll other events to not get this move event
+             it.consumePositionChange()
+            },
+
+        )
+```
+
+You can refer [this answer](https://stackoverflow.com/a/70847531/5457853) for details.
+
 ### Modifier.detectMultiplePointerTransformGestures
 Returns the rotation, in degrees, of the pointers between the `PointerInputChange.previousPosition` and `PointerInputChange.position` states.
 Only number of pointers that equal to `numberOfPointersRequired` that are down in both previous and current states are considered.
