@@ -3,6 +3,7 @@ package com.smarttoolfactory.gesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.*
+import androidx.compose.ui.input.pointer.PointerInputChange
 
 /**
  * Create a modifier for processing pointer motion input within the region of the modified element.

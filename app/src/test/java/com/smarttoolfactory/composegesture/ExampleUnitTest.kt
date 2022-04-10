@@ -1,4 +1,4 @@
-package com.smarttoolfactory.gesture
+package com.smarttoolfactory.composegesture
 
 import org.junit.Test
 

@@ -12,6 +12,6 @@ dependencyResolutionManagement {
         mavenCentral()
     }
 }
-rootProject.name = "Compose Extended Gestures"
+rootProject.name = "Compose Gesture Extended"
 include ':app'
 include ':gesture'

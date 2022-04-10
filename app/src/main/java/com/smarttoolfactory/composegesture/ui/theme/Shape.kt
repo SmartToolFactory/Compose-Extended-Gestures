@@ -1,4 +1,4 @@
-package com.smarttoolfactory.gesture.ui.theme
+package com.smarttoolfactory.composegesture.ui.theme
 
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Shapes

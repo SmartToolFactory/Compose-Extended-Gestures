@@ -31,6 +31,7 @@ suspend fun PointerInputScope.detectMotionEvents(
     onUp: (PointerInputChange) -> Unit = {},
     delayAfterDownInMillis: Long = 0L
 ) {
+
     coroutineScope {
         forEachGesture {
             awaitPointerEventScope {

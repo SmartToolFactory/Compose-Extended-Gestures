@@ -1,4 +1,4 @@
-package com.smarttoolfactory.gesture
+package com.smarttoolfactory.composegesture
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -10,13 +10,13 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import com.smarttoolfactory.gesture.ui.theme.ComposeExtendedGesturesTheme
+import com.smarttoolfactory.composegesture.ui.theme.ComposeGestureExtendedTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            ComposeExtendedGesturesTheme {
+            ComposeGestureExtendedTheme {
                 // A surface container using the 'background' color from the theme
                 Surface(
                     modifier = Modifier.fillMaxSize(),
@@ -37,7 +37,7 @@ fun Greeting(name: String) {
 @Preview(showBackground = true)
 @Composable
 fun DefaultPreview() {
-    ComposeExtendedGesturesTheme {
+    ComposeGestureExtendedTheme {
         Greeting("Android")
     }
 }
