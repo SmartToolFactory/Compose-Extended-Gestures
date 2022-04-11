@@ -1,6 +1,6 @@
 # Jetpack Compose Gestures
 
-![jitpack](https://jitpack.io/v/SmartToolFactory/Compose-Extended-Gestures.svg)
+[![](https://jitpack.io/v/SmartToolFactory/Compose-Extended-Gestures.svg)](https://jitpack.io/#SmartToolFactory/Compose-Extended-Gestures)
 
 Counterpart of `onTouchEvent` for Jetpack Compose and transform gesture with specific number of
 pointers
@@ -111,10 +111,10 @@ To get a Git project into your build:
   of repositories:
 ```
 allprojects {
-    repositories {
-        ...
-        maven { url 'https://jitpack.io' }
-    }
+  repositories {
+      ...
+      maven { url 'https://jitpack.io' }
+  }
 }
 ```
 
@@ -122,6 +122,6 @@ allprojects {
 
 ```
 dependencies {
-        implementation 'com.github.SmartToolFactory:Compose-Extended-Gestures:Tag'
+  implementation 'com.github.SmartToolFactory:Compose-Extended-Gestures:Tag'
 }
 ```
