@@ -1,9 +1,11 @@
-### Jetpack Compose Gestures
+# Jetpack Compose Gestures
+
+![jitpack](https://jitpack.io/v/SmartToolFactory/Compose-Extended-Gestures.svg)
 
 Counterpart of `onTouchEvent` for Jetpack Compose and transform gesture with specific number of
 pointers
 
-### Modifier.pointerMotionEvents
+## Modifier.pointerMotionEvents
 
 Creates a modifier for processing pointer motion input within the region of the modified element.
 
@@ -66,7 +68,7 @@ like **scroll** or other **pointerInput**s to not intercept your gesture
 
 You can refer [this answer](https://stackoverflow.com/a/70847531/5457853) for details.
 
-### Modifier.detectMultiplePointerTransformGestures
+## Modifier.detectMultiplePointerTransformGestures
 
 Returns the rotation, in degrees, of the pointers between the `PointerInputChange.previousPosition`
 and `PointerInputChange.position` states. Only number of pointers that equal
@@ -98,5 +100,28 @@ Modifier.pointerInput(Unit) {
                         "Rotate: ${decimalFormat.format(gestureRotate)}, pan: $gesturePan"
         }
     )
+}
+```
+
+## Gradle Setup
+
+To get a Git project into your build:
+
+* Step 1. Add the JitPack repository to your build file Add it in your root build.gradle at the end
+  of repositories:
+```
+allprojects {
+    repositories {
+        ...
+        maven { url 'https://jitpack.io' }
+    }
+}
+```
+
+* Step 2. Add the dependency
+
+```
+dependencies {
+        implementation 'com.github.SmartToolFactory:Compose-Extended-Gestures:Tag'
 }
 ```
