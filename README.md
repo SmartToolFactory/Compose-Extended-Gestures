@@ -53,7 +53,7 @@ fun Modifier.pointerMotionEventList(
 like **scroll** or other **pointerInput**s to not intercept your gesture
 
 ```
-        val dragModifier = Modifier.pointerMotionEvents(
+       Modifier.pointerMotionEvents(
             onDown = {
                 // When down is consumed
                 it.consumeDownChange()
@@ -62,7 +62,7 @@ like **scroll** or other **pointerInput**s to not intercept your gesture
             // Consuming move prevents scroll other events to not get this move event
              it.consumePositionChange()
             },
-
+            delayAfterDownInMillis =20
         )
 ```
 
@@ -79,25 +79,9 @@ Usage
 ```
 Modifier.pointerInput(Unit) {
     detectMultiplePointerTransformGestures(
+        numberOfPointersRequired = 2,
         onGesture = { gestureCentroid, gesturePan, gestureZoom, gestureRotate ->
-            val oldScale = zoom
-            val newScale = zoom * gestureZoom
-
-            // For natural zooming and rotating, the centroid of the gesture should
-            // be the fixed point where zooming and rotating occurs.
-            // We compute where the centroid was (in the pre-transformed coordinate
-            // space), and then compute where it will be after this delta.
-            // We then compute what the new offset should be to keep the centroid
-            // visually stationary for rotating and zooming, and also apply the pan.
-            offset = (offset + gestureCentroid / oldScale).rotateBy(gestureRotate) -
-                    (gestureCentroid / newScale + gesturePan / oldScale)
-            zoom = newScale.coerceIn(0.5f..5f)
-            angle += gestureRotate
-
-            transformDetailText =
-                "Zoom: ${decimalFormat.format(zoom)}, centroid: $gestureCentroid\n" +
-                        "angle: ${decimalFormat.format(angle)}, " +
-                        "Rotate: ${decimalFormat.format(gestureRotate)}, pan: $gesturePan"
+            // Centroid, pan, zoom, and rotation only when 2 pointers are down
         }
     )
 }
