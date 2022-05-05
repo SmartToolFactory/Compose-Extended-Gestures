@@ -9,11 +9,13 @@ pointers
 
 Creates a modifier for processing pointer motion input within the region of the modified element.
 
-After `AwaitPointerEventScope.awaitFirstDown` returned a `PointerInputChange` then `onDown` is
-called at first pointer contact. Moving any pointer
-causes `AwaitPointerEventScope.awaitPointerEvent` then `onMove` is called. When last pointer is
-up `onUp` is called. To prevent other pointer functions that call `awaitFirstDown`
-or `awaitPointerEvent` (scroll, swipe, detect functions) receiving changes
+After `AwaitPointerEventScope.awaitFirstDown` returns a `PointerInputChange` followed by `onDown` 
+ at first pointer contact. Moving any pointer
+invokes `AwaitPointerEventScope.awaitPointerEvent` then `onMove` is called. When last pointer is
+up `onUp` is called. 
+
+To prevent other pointer functions that call `awaitFirstDown`
+or `awaitPointerEvent` (scroll, swipe, detect functions) 
 call `PointerInputChange.consumeDownChange` in `onDown`, and
 call `PointerInputChange.consumePositionChange` in `onMove` block.
 
@@ -31,7 +33,7 @@ fun Modifier.pointerMotionEvents(
 )
 ```
 
-and the one returns list of pointer on move
+Overload that returns list of pointers from `onMove`
 
 ```
 fun Modifier.pointerMotionEventList(
@@ -43,11 +45,11 @@ fun Modifier.pointerMotionEventList(
 ) 
 ```
 
-* `delayAfterDownInMillis` parameter invokes Coroutines delay between first `down`, and `onMove`.
-  There is a delay about 20ms between in View's `onTouchEvent` first touch and move and this might
+* `delayAfterDownInMillis` parameter invokes Coroutines delay between `onDown`, and `onMove`.
+  There is a delay about 20ms between in View's `onTouchEvent` first touch and move, similar delay might
   be required with Compose too, especially when drawing to `Canvas` which misses very fast events,
-  this might cause missing first touch that might be required to detect whether is touch is in
-  required region of Composable.
+  Delaying move behavior might be required to detect whether is touch is in
+  required region of Composable at first pointer contact.
 
 `PointerInputChange` down and move events should be consumed if you need to prevent other gestures
 like **scroll** or other **pointerInput**s to not intercept your gesture
