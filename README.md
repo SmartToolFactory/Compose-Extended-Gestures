@@ -5,6 +5,12 @@
 Counterpart of `onTouchEvent` for Jetpack Compose and transform gesture with specific number of
 pointers
 
+
+https://user-images.githubusercontent.com/35650605/167546558-2779728f-d675-4499-b852-a0638c1cc8aa.mp4
+
+
+
+
 ## Modifier.pointerMotionEvents
 
 Creates a modifier for processing pointer motion input within the region of the modified element.
