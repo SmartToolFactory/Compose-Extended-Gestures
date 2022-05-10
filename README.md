@@ -17,7 +17,7 @@ or `awaitPointerEvent` (scroll, swipe, detect functions) receiving changes
 call `PointerInputChange.consumeDownChange` in `onDown`, and
 call `PointerInputChange.consumePositionChange` in `onMove` block.
 
-```
+```kotlin
 fun Modifier.pointerMotionEvents(
     vararg keys: Any?,
     onDown: (PointerInputChange) -> Unit = {},
@@ -33,7 +33,7 @@ fun Modifier.pointerMotionEvents(
 
 and the one returns list of pointer on move
 
-```
+```kotlin
 fun Modifier.pointerMotionEventList(
     key1: Any? = Unit,
     onDown: (PointerInputChange) -> Unit = {},
@@ -52,39 +52,78 @@ fun Modifier.pointerMotionEventList(
 `PointerInputChange` down and move events should be consumed if you need to prevent other gestures
 like **scroll** or other **pointerInput**s to not intercept your gesture
 
-```
-       Modifier.pointerMotionEvents(
-            onDown = {
-                // When down is consumed
-                it.consumeDownChange()
-            },
-            onMove = {
-            // Consuming move prevents scroll other events to not get this move event
-             it.consumePositionChange()
-            },
-            delayAfterDownInMillis =20
-        )
+```kotlin
+ Modifier.pointerMotionEvents(
+    onDown = {
+        // When down is consumed
+        it.consumeDownChange()
+    },
+    onMove = {
+        // Consuming move prevents scroll other events to not get this move event
+        it.consumePositionChange()
+    },
+    delayAfterDownInMillis = 20
+)
 ```
 
 You can refer [this answer](https://stackoverflow.com/a/70847531/5457853) for details.
 
-## Modifier.detectMultiplePointerTransformGestures
+## Modifier.detectTransformGesturesAndChanges
 
-Returns the rotation, in degrees, of the pointers between the `PointerInputChange.previousPosition`
-and `PointerInputChange.position` states. Only number of pointers that equal
-to `numberOfPointersRequired` that are down in both previous and current states are considered.
+A gesture detector for rotation, panning, and zoom. Once touch slop has been reached, the user can
+use rotation, panning and zoom gestures. `onGesture` will be called when any of the rotation, zoom
+or pan occurs, passing the rotation angle in degrees, zoom in scale factor and pan as an offset in
+pixels. Each of these changes is a difference between the previous call and the current gesture.
+This will consume all position changes after touch slop has been reached. onGesture will also
+provide centroid of all the pointers that are down.
+
+After gesture started when last pointer is up `onGestureEnd` is triggered.
+`pointerList` returns info about pointers that are available to this gesture
 
 Usage
 
-```
+```kotlin
 Modifier.pointerInput(Unit) {
-    detectMultiplePointerTransformGestures(
-        numberOfPointersRequired = 2,
-        onGesture = { gestureCentroid, gesturePan, gestureZoom, gestureRotate ->
-            // Centroid, pan, zoom, and rotation only when 2 pointers are down
+    detectTransformGesturesAndChanges(
+        onGesture = { gestureCentroid: Offset,
+                      gesturePan: Offset,
+                      gestureZoom: Float,
+                      gestureRotate: Float,
+                      pointerList: List<PointerInputChange> ->
+
+        },
+        onGestureEnd = {
+            transformDetailText = "GESTURE END"
         }
     )
 }
+```
+
+## Modifier.detectTransformGesturesAndChanges
+Transform gesture as `detectTransformGestures` except with `gestureEnd` callback, returns
+number of pointers that are down and checks for requisite and number of pointers before continuing
+transform gestures. when requisite is not met gesture is on hold and ends when last pointer
+is up. This might be useful in scenarios like not panning when pointer number is higher than 1,
+or scenarios require specific conditions to be met
+
+```kotlin
+Modifier
+    .pointerInput(Unit) {
+        detectPointerTransformGestures(
+            numberOfPointers = 1,
+            requisite = PointerRequisite.GreaterThan,
+            onGesture = { gestureCentroid: Offset,
+                          gesturePan: Offset,
+                          gestureZoom: Float,
+                          gestureRotate: Float,
+                          numberOfPointers: Int ->
+
+            },
+            onGestureEnd = {
+                transformDetailText = "GESTURE END"
+            }
+        )
+    }
 ```
 
 ## Gradle Setup
@@ -93,6 +132,7 @@ To get a Git project into your build:
 
 * Step 1. Add the JitPack repository to your build file Add it in your root build.gradle at the end
   of repositories:
+
 ```
 allprojects {
   repositories {
