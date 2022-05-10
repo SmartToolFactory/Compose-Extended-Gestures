@@ -39,7 +39,7 @@ fun Modifier.pointerMotionEvents(
 )
 ```
 
-Overload that returns list of pointers from `onMove`
+pointerMotionEventList returns list of pointers in `onMove`
 
 ```kotlin
 fun Modifier.pointerMotionEventList(
