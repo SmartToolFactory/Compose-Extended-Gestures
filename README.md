@@ -39,7 +39,7 @@ fun Modifier.pointerMotionEvents(
 )
 ```
 
-Overload that returns list of pointers from `onMove`
+pointerMotionEventList returns list of pointers in `onMove`
 
 ```kotlin
 fun Modifier.pointerMotionEventList(
@@ -107,7 +107,7 @@ Modifier.pointerInput(Unit) {
 }
 ```
 
-## Modifier.detectTransformGesturesAndChanges
+## Modifier.detectPointerTransformGestures
 Transform gesture as `detectTransformGestures` except with `gestureEnd` callback, returns
 number of pointers that are down and checks for requisite and number of pointers before continuing
 transform gestures. when requisite is not met gesture is on hold and ends when last pointer
