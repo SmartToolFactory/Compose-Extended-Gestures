@@ -7,36 +7,38 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 /**
- * Reads [awaitFirstDown], and [awaitPointerEvent] to
+ * Reads [awaitFirstDown], and [AwaitPointerEventScope.awaitPointerEvent] to
  * get [PointerInputChange] and motion event states
  * [onDown], [onMove], and [onUp].
  *
- * To prevent other pointer functions that call [awaitFirstDown] or [awaitPointerEvent]
+ * To prevent other pointer functions that call [awaitFirstDown]
+ * or [AwaitPointerEventScope.awaitPointerEvent]
  * (scroll, swipe, detect functions)
- * receiving changes call [PointerInputChange.consumeDownChange] in [onDown],
- * and call [PointerInputChange.consumePositionChange]
- * in [onMove] block.
+ * receiving changes call [PointerInputChange.consume]  in [onMove]  or call
+ * [PointerInputChange.consume] in [onDown] to prevent events
+ * that check first pointer interaction.
  *
  * @param onDown is invoked when first pointer is down initially.
  * @param onMove one or multiple pointers are being moved on screen.
  * @param onUp last pointer is up
  * @param delayAfterDownInMillis is optional delay after [onDown] This delay might be
  * required Composables like **Canvas** to process [onDown] before [onMove]
- *
-
+ * @param requireUnconsumed is `true` and the first
+ * down is consumed in the [PointerEventPass.Main] pass, that gesture is ignored.
  */
 suspend fun PointerInputScope.detectMotionEvents(
     onDown: (PointerInputChange) -> Unit = {},
     onMove: (PointerInputChange) -> Unit = {},
     onUp: (PointerInputChange) -> Unit = {},
-    delayAfterDownInMillis: Long = 0L
-) {
+    delayAfterDownInMillis: Long = 0L,
+    requireUnconsumed: Boolean = true
+    ) {
 
     coroutineScope {
         forEachGesture {
             awaitPointerEventScope {
                 // Wait for at least one pointer to press down, and set first contact position
-                val down: PointerInputChange = awaitFirstDown()
+                val down: PointerInputChange = awaitFirstDown(requireUnconsumed)
                 onDown(down)
 
                 var pointer = down
@@ -86,36 +88,40 @@ suspend fun PointerInputScope.detectMotionEvents(
 }
 
 /**
- * Reads [awaitFirstDown], and [awaitPointerEvent] to
+ * Reads [awaitFirstDown], and [AwaitPointerEventScope.awaitPointerEvent] to
  * get [PointerInputChange] and motion event states
  * [onDown], [onMove], and [onUp]. Unlike overload of this function [onMove] returns
  * list of [PointerInputChange] to get data about all pointers that are on the screen.
  *
- * To prevent other pointer functions that call [awaitFirstDown] or [awaitPointerEvent]
+ * To prevent other pointer functions that call [awaitFirstDown]
+ * or [AwaitPointerEventScope.awaitPointerEvent]
  * (scroll, swipe, detect functions)
- * receiving changes call [PointerInputChange.consumeDownChange] in [onDown],
- * and call [PointerInputChange.consumePositionChange]
- * in [onMove] block.
+ * receiving changes call [PointerInputChange.consume]  in [onMove]  or call
+ * [PointerInputChange.consume] in [onDown] to prevent events
+ * that check first pointer interaction.
  *
  * @param onDown is invoked when first pointer is down initially.
  * @param onMove one or multiple pointers are being moved on screen.
  * @param onUp last pointer is up
  * @param delayAfterDownInMillis is optional delay after [onDown] This delay might be
  * required Composables like **Canvas** to process [onDown] before [onMove]
+ * @param requireUnconsumed is `true` and the first
+ * down is consumed in the [PointerEventPass.Main] pass, that gesture is ignored.
  *
  */
 suspend fun PointerInputScope.detectMotionEventsAsList(
     onDown: (PointerInputChange) -> Unit = {},
     onMove: (List<PointerInputChange>) -> Unit = {},
     onUp: (PointerInputChange) -> Unit = {},
-    delayAfterDownInMillis: Long = 0L
+    delayAfterDownInMillis: Long = 0L,
+    requireUnconsumed: Boolean = true
 ) {
 
     coroutineScope {
         forEachGesture {
             awaitPointerEventScope {
                 // Wait for at least one pointer to press down, and set first contact position
-                val down: PointerInputChange = awaitFirstDown()
+                val down: PointerInputChange = awaitFirstDown(requireUnconsumed)
                 onDown(down)
 
                 var pointer = down

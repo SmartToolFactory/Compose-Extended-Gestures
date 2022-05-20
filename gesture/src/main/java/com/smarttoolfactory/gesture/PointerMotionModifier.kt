@@ -3,7 +3,6 @@ package com.smarttoolfactory.gesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.*
-import androidx.compose.ui.input.pointer.PointerInputChange
 
 /**
  * Create a modifier for processing pointer motion input within the region of the modified element.
@@ -13,17 +12,20 @@ import androidx.compose.ui.input.pointer.PointerInputChange
  * Moving any pointer causes [AwaitPointerEventScope.awaitPointerEvent] then [onMove] is called.
  * When last pointer is up [onUp] is called.
  *
- * To prevent other pointer functions that call [awaitFirstDown] or [awaitPointerEvent]
+ * To prevent other pointer functions that call [awaitFirstDown]
+ * or [AwaitPointerEventScope.awaitPointerEvent]
  * (scroll, swipe, detect functions)
- * receiving changes call [PointerInputChange.consumeDownChange] in [onDown],
- * and call [PointerInputChange.consumePositionChange]
- * in [onMove] block.
+ * receiving changes call [PointerInputChange.consume]  in [onMove]  or call
+ * [PointerInputChange.consume] in [onDown] to prevent events
+ * that check first pointer interaction.
  *
  * @param onDown is invoked when first pointer is down initially.
  * @param onMove is invoked when one or multiple pointers are being moved on screen.
  * @param onUp is invoked when last pointer is up
  * @param delayAfterDownInMillis is optional delay after [onDown] This delay might be
  * required Composables like **Canvas** to process [onDown] before [onMove]
+ * @param requireUnconsumed is `true` and the first
+ * down is consumed in the [PointerEventPass.Main] pass, that gesture is ignored.
  *
  * The pointer input handling block will be cancelled and re-started when pointerInput
  * is recomposed with a different [key1].
@@ -33,12 +35,14 @@ fun Modifier.pointerMotionEvents(
     onDown: (PointerInputChange) -> Unit = {},
     onMove: (PointerInputChange) -> Unit = {},
     onUp: (PointerInputChange) -> Unit = {},
-    delayAfterDownInMillis: Long = 0L
+    delayAfterDownInMillis: Long = 0L,
+    requireUnconsumed: Boolean = true
 ) = this.then(
     Modifier.pointerInput(key1) {
-        detectMotionEvents(onDown, onMove, onUp, delayAfterDownInMillis)
+        detectMotionEvents(onDown, onMove, onUp, delayAfterDownInMillis, requireUnconsumed)
     }
 )
+
 /**
  * Create a modifier for processing pointer motion input within the region of the modified element.
  *
@@ -47,17 +51,20 @@ fun Modifier.pointerMotionEvents(
  * Moving any pointer causes [AwaitPointerEventScope.awaitPointerEvent] then [onMove] is called.
  * When last pointer is up [onUp] is called.
  *
- * To prevent other pointer functions that call [awaitFirstDown] or [awaitPointerEvent]
+ * To prevent other pointer functions that call [awaitFirstDown]
+ * or [AwaitPointerEventScope.awaitPointerEvent]
  * (scroll, swipe, detect functions)
- * receiving changes call [PointerInputChange.consumeDownChange] in [onDown],
- * and call [PointerInputChange.consumePositionChange]
- * in [onMove] block.
+ * receiving changes call [PointerInputChange.consume]  in [onMove]  or call
+ * [PointerInputChange.consume] in [onDown] to prevent events
+ * that check first pointer interaction.
  *
  * @param onDown is invoked when first pointer is down initially.
  * @param onMove is invoked when one or multiple pointers are being moved on screen.
  * @param onUp is invoked when last pointer is up
  * @param delayAfterDownInMillis is optional delay after [onDown] This delay might be
  * required Composables like **Canvas** to process [onDown] before [onMove]
+ * @param requireUnconsumed is `true` and the first
+ * down is consumed in the [PointerEventPass.Main] pass, that gesture is ignored.
  *
  * The pointer input handling block will be cancelled and re-started when pointerInput
  * is recomposed with a different [key1] or [key2].
@@ -68,10 +75,11 @@ fun Modifier.pointerMotionEvents(
     onDown: (PointerInputChange) -> Unit = {},
     onMove: (PointerInputChange) -> Unit = {},
     onUp: (PointerInputChange) -> Unit = {},
-    delayAfterDownInMillis: Long = 0L
+    delayAfterDownInMillis: Long = 0L,
+    requireUnconsumed: Boolean = true
 ) = this.then(
     Modifier.pointerInput(key1, key2) {
-        pointerMotionEvents(onDown, onMove, onUp, delayAfterDownInMillis)
+        detectMotionEvents(onDown, onMove, onUp, delayAfterDownInMillis, requireUnconsumed)
     }
 )
 
@@ -83,17 +91,20 @@ fun Modifier.pointerMotionEvents(
  * Moving any pointer causes [AwaitPointerEventScope.awaitPointerEvent] then [onMove] is called.
  * When last pointer is up [onUp] is called.
  *
- * To prevent other pointer functions that call [awaitFirstDown] or [awaitPointerEvent]
+ * To prevent other pointer functions that call [awaitFirstDown]
+ * or [AwaitPointerEventScope.awaitPointerEvent]
  * (scroll, swipe, detect functions)
- * receiving changes call [PointerInputChange.consumeDownChange] in [onDown],
- * and call [PointerInputChange.consumePositionChange]
- * in [onMove] block.
+ * receiving changes call [PointerInputChange.consume]  in [onMove]  or call
+ * [PointerInputChange.consume] in [onDown] to prevent events
+ * that check first pointer interaction.
  *
  * @param onDown is invoked when first pointer is down initially.
  * @param onMove is invoked when one or multiple pointers are being moved on screen.
  * @param onUp is invoked when last pointer is up
  * @param delayAfterDownInMillis is optional delay after [onDown] This delay might be
  * required Composables like **Canvas** to process [onDown] before [onMove]
+ * @param requireUnconsumed is `true` and the first
+ * down is consumed in the [PointerEventPass.Main] pass, that gesture is ignored.
  *
  * The pointer input handling block will be cancelled and re-started when pointerInput
  * is recomposed with any different [keys].
@@ -103,10 +114,11 @@ fun Modifier.pointerMotionEvents(
     onDown: (PointerInputChange) -> Unit = {},
     onMove: (PointerInputChange) -> Unit = {},
     onUp: (PointerInputChange) -> Unit = {},
-    delayAfterDownInMillis: Long = 0L
+    delayAfterDownInMillis: Long = 0L,
+    requireUnconsumed: Boolean = true
 ) = this.then(
     Modifier.pointerInput(keys) {
-        detectMotionEvents(onDown, onMove, onUp, delayAfterDownInMillis)
+        detectMotionEvents(onDown, onMove, onUp, delayAfterDownInMillis, requireUnconsumed)
     }
 )
 
@@ -118,17 +130,20 @@ fun Modifier.pointerMotionEvents(
  * Moving any pointer causes [AwaitPointerEventScope.awaitPointerEvent] then [onMove] is called.
  * When last pointer is up [onUp] is called.
  *
- * To prevent other pointer functions that call [awaitFirstDown] or [awaitPointerEvent]
+ * To prevent other pointer functions that call [awaitFirstDown]
+ * or [AwaitPointerEventScope.awaitPointerEvent]
  * (scroll, swipe, detect functions)
- * receiving changes call [PointerInputChange.consumeDownChange] in [onDown],
- * and call [PointerInputChange.consumePositionChange]
- * in [onMove] block.
+ * receiving changes call [PointerInputChange.consume]  in [onMove]  or call
+ * [PointerInputChange.consume] in [onDown] to prevent events
+ * that check first pointer interaction.
  *
  * @param onDown is invoked when first pointer is down initially.
  * @param onMove is invoked when one or multiple pointers are being moved on screen.
  * @param onUp is invoked when last pointer is up
  * @param delayAfterDownInMillis is optional delay after [onDown] This delay might be
  * required Composables like **Canvas** to process [onDown] before [onMove]
+ * @param requireUnconsumed is `true` and the first
+ * down is consumed in the [PointerEventPass.Main] pass, that gesture is ignored.
  *
  *  The pointer input handling block will be cancelled and re-started when pointerInput
  *  is recomposed with a different [key1].
@@ -138,10 +153,11 @@ fun Modifier.pointerMotionEventList(
     onDown: (PointerInputChange) -> Unit = {},
     onMove: (List<PointerInputChange>) -> Unit = {},
     onUp: (PointerInputChange) -> Unit = {},
-    delayAfterDownInMillis: Long = 0L
+    delayAfterDownInMillis: Long = 0L,
+    requireUnconsumed: Boolean = true
 ) = this.then(
     Modifier.pointerInput(key1) {
-        detectMotionEventsAsList(onDown, onMove, onUp, delayAfterDownInMillis)
+        detectMotionEventsAsList(onDown, onMove, onUp, delayAfterDownInMillis, requireUnconsumed)
     }
 )
 
@@ -153,17 +169,20 @@ fun Modifier.pointerMotionEventList(
  * Moving any pointer causes [AwaitPointerEventScope.awaitPointerEvent] then [onMove] is called.
  * When last pointer is up [onUp] is called.
  *
- * To prevent other pointer functions that call [awaitFirstDown] or [awaitPointerEvent]
+ * To prevent other pointer functions that call [awaitFirstDown]
+ * or [AwaitPointerEventScope.awaitPointerEvent]
  * (scroll, swipe, detect functions)
- * receiving changes call [PointerInputChange.consumeDownChange] in [onDown],
- * and call [PointerInputChange.consumePositionChange]
- * in [onMove] block.
+ * receiving changes call [PointerInputChange.consume]  in [onMove]  or call
+ * [PointerInputChange.consume] in [onDown] to prevent events
+ * that check first pointer interaction.
  *
  * @param onDown is invoked when first pointer is down initially.
  * @param onMove is invoked when one or multiple pointers are being moved on screen.
  * @param onUp is invoked when last pointer is up
  * @param delayAfterDownInMillis is optional delay after [onDown] This delay might be
  * required Composables like **Canvas** to process [onDown] before [onMove]
+ * @param requireUnconsumed is `true` and the first
+ * down is consumed in the [PointerEventPass.Main] pass, that gesture is ignored.
  *
  * The pointer input handling block will be cancelled and re-started when pointerInput
  * is recomposed with a different [key1] or [key2].
@@ -174,10 +193,11 @@ fun Modifier.pointerMotionEventList(
     onDown: (PointerInputChange) -> Unit = {},
     onMove: (List<PointerInputChange>) -> Unit = {},
     onUp: (PointerInputChange) -> Unit = {},
-    delayAfterDownInMillis: Long = 0L
+    delayAfterDownInMillis: Long = 0L,
+    requireUnconsumed: Boolean = true
 ) = this.then(
     Modifier.pointerInput(key1, key2) {
-        detectMotionEventsAsList(onDown, onMove, onUp, delayAfterDownInMillis)
+        detectMotionEventsAsList(onDown, onMove, onUp, delayAfterDownInMillis, requireUnconsumed)
     }
 )
 
@@ -189,17 +209,20 @@ fun Modifier.pointerMotionEventList(
  * Moving any pointer causes [AwaitPointerEventScope.awaitPointerEvent] then [onMove] is called.
  * When last pointer is up [onUp] is called.
  *
- * To prevent other pointer functions that call [awaitFirstDown] or [awaitPointerEvent]
+ * To prevent other pointer functions that call [awaitFirstDown]
+ * or [AwaitPointerEventScope.awaitPointerEvent]
  * (scroll, swipe, detect functions)
- * receiving changes call [PointerInputChange.consumeDownChange] in [onDown],
- * and call [PointerInputChange.consumePositionChange]
- * in [onMove] block.
+ * receiving changes call [PointerInputChange.consume]  in [onMove]  or call
+ * [PointerInputChange.consume] in [onDown] to prevent events
+ * that check first pointer interaction.
  *
  * @param onDown is invoked when first pointer is down initially.
  * @param onMove is invoked when one or multiple pointers are being moved on screen.
  * @param onUp is invoked when last pointer is up
  * @param delayAfterDownInMillis is optional delay after [onDown] This delay might be
  * required Composables like **Canvas** to process [onDown] before [onMove]
+ * @param requireUnconsumed is `true` and the first
+ * down is consumed in the [PointerEventPass.Main] pass, that gesture is ignored.
  *
  * The pointer input handling block will be cancelled and re-started when pointerInput
  * is recomposed with any different [keys].
@@ -209,9 +232,10 @@ fun Modifier.pointerMotionEventList(
     onDown: (PointerInputChange) -> Unit = {},
     onMove: (List<PointerInputChange>) -> Unit = {},
     onUp: (PointerInputChange) -> Unit = {},
-    delayAfterDownInMillis: Long = 0L
+    delayAfterDownInMillis: Long = 0L,
+    requireUnconsumed: Boolean = true
 ) = this.then(
     Modifier.pointerInput(keys) {
-        detectMotionEventsAsList(onDown, onMove, onUp, delayAfterDownInMillis)
+        detectMotionEventsAsList(onDown, onMove, onUp, delayAfterDownInMillis, requireUnconsumed)
     }
 )

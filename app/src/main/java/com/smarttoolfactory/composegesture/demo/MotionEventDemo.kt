@@ -9,13 +9,11 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.input.pointer.PointerInputChange
-import androidx.compose.ui.input.pointer.consumePositionChange
+import androidx.compose.ui.input.pointer.*
 import androidx.compose.ui.unit.dp
 import com.smarttoolfactory.gesture.MotionEvent
 import com.smarttoolfactory.gesture.pointerMotionEventList
@@ -40,7 +38,6 @@ fun MoveMotionEventDemo() {
             mutableStateOf("")
         }
 
-
         val canvasModifier1 = Modifier
             .fillMaxWidth()
             .height(250.dp)
@@ -48,10 +45,11 @@ fun MoveMotionEventDemo() {
             .pointerMotionEvents(
                 onDown = {
                     motionEvent1 = MotionEvent.Down
+                    it.consume()
                 },
                 onMove = {
                     motionEvent1 = MotionEvent.Move
-
+                    it.consume()
                 },
                 onUp = {
                     motionEvent1 = MotionEvent.Up
@@ -66,9 +64,11 @@ fun MoveMotionEventDemo() {
             .pointerMotionEvents(
                 onDown = {
                     motionEvent2 = MotionEvent.Down
+                    it.consume()
                 },
                 onMove = {
                     motionEvent2 = MotionEvent.Move
+                    it.consume()
                 },
                 onUp = {
                     motionEvent2 = MotionEvent.Up
@@ -83,13 +83,29 @@ fun MoveMotionEventDemo() {
             .height(200.dp)
             .pointerMotionEventList(
 
+                onDown = {pointerInputChange: PointerInputChange ->
+                    pointerInputChange.consume()
+                    text = "onDOWN id: ${pointerInputChange.id}\n" +
+                            "pressed: ${pointerInputChange.pressed}, " +
+                            "previousPressed: ${pointerInputChange.previousPressed}\n" +
+                            "changedToDown: ${pointerInputChange.changedToDown()}\n" +
+                            "changedToDownIgnoreConsumed: " +
+                            "${pointerInputChange.changedToDownIgnoreConsumed()}\n" +
+                            "isConsumed: ${pointerInputChange.isConsumed}\n"
+
+                },
                 onMove = {
-                    var pointerChangeText = "Pointer size: ${it.size}\n"
+                    var pointerChangeText = "onMOVE Pointer size: ${it.size}\n"
                     it.map { pointerInputChange: PointerInputChange ->
-                        pointerInputChange.consumePositionChange()
+                        // Consuming change causes positionChange to return Offset.Zero
+                        // and positionChanged() to false, uncomment it to see
+                        pointerInputChange.consume()
                         pointerChangeText += "id: ${pointerInputChange.id}\n" +
                                 " pressed: ${pointerInputChange.pressed}, " +
                                 "previousPressed: ${pointerInputChange.previousPressed}\n" +
+                                "isConsumed: ${pointerInputChange.isConsumed}\n" +
+                                "positionChange: ${pointerInputChange.positionChange()}\n" +
+                                "positionChanged: ${pointerInputChange.positionChanged()}\n" +
                                 "pos: ${pointerInputChange.position}\n"
                     }
 
@@ -99,7 +115,6 @@ fun MoveMotionEventDemo() {
                 delayAfterDownInMillis = 20
             )
 
-        Text("pointerMotionEvents")
         Canvas(modifier = canvasModifier1) {
 
             when (motionEvent1) {
@@ -142,6 +157,7 @@ fun MoveMotionEventDemo() {
 
         Spacer(modifier = Modifier.height(30.dp))
         Text("pointerMotionEventList pointers")
+
         val paint = Paint().apply {
             textSize = 40f
             color = Color.Black.toArgb()

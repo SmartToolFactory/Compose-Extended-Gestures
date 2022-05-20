@@ -22,8 +22,8 @@ up `onUp` is called.
 
 To prevent other pointer functions that call `awaitFirstDown`
 or `awaitPointerEvent` (scroll, swipe, detect functions) 
-call `PointerInputChange.consumeDownChange` in `onDown`, and
-call `PointerInputChange.consumePositionChange` in `onMove` block.
+call `PointerInputChange.consume()` in `onDown`, and
+call `PointerInputChange.consume()` in `onMove` block.
 
 ```kotlin
 fun Modifier.pointerMotionEvents(
@@ -64,11 +64,11 @@ like **scroll** or other **pointerInput**s to not intercept your gesture
  Modifier.pointerMotionEvents(
     onDown = {
         // When down is consumed
-        it.consumeDownChange()
+        it.consume()
     },
     onMove = {
         // Consuming move prevents scroll other events to not get this move event
-        it.consumePositionChange()
+        it.consume()
     },
     delayAfterDownInMillis = 20
 )

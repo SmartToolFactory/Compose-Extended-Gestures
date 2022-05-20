@@ -47,7 +47,7 @@ suspend fun PointerInputScope.detectMultiplePointerTransformGestures(
 
                 // If any position change is consumed from another pointer or pointer
                 // count that is pressed is not equal to pointerCount cancel this gesture
-                val canceled = event.changes.any { it.positionChangeConsumed() }
+                val canceled = event.changes.any { it.isConsumed }
 
                 if (!canceled && downPointerCount == numberOfPointersRequired) {
                     val zoomChange = event.calculateZoom()
@@ -85,7 +85,7 @@ suspend fun PointerInputScope.detectMultiplePointerTransformGestures(
                         }
                         event.changes.forEach {
                             if (it.positionChanged()) {
-                                it.consumeAllChanges()
+                                it.consume()
                             }
                         }
                     }
@@ -163,7 +163,7 @@ suspend fun PointerInputScope.detectPointerTransformGestures(
                 // If any position change is consumed from another PointerInputChange
                 // or pointer count requirement is not fulfilled
                 val canceled =
-                    event.changes.any { it.positionChangeConsumed() }
+                    event.changes.any { it.isConsumed }
 
                 if (!canceled && requirementFulfilled) {
                     gestureStarted = true
@@ -208,7 +208,7 @@ suspend fun PointerInputScope.detectPointerTransformGestures(
                         }
                         event.changes.forEach {
                             if (it.positionChanged()) {
-                                it.consumeAllChanges()
+                                it.consume()
                             }
                         }
                     }
@@ -273,7 +273,7 @@ suspend fun PointerInputScope.detectTransformGesturesAndChanges(
                 // If any position change is consumed from another PointerInputChange
                 // or pointer count requirement is not fulfilled
                 val canceled =
-                    event.changes.any { it.positionChangeConsumed() }
+                    event.changes.any { it.isConsumed }
 
                 if (!canceled) {
                     gestureStarted = true
@@ -318,7 +318,7 @@ suspend fun PointerInputScope.detectTransformGesturesAndChanges(
                         }
                         event.changes.forEach {
                             if (it.positionChanged()) {
-                                it.consumeAllChanges()
+                                it.consume()
                             }
                         }
                     }
