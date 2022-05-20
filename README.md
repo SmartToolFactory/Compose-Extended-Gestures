@@ -5,25 +5,20 @@
 Counterpart of `onTouchEvent` for Jetpack Compose and transform gesture with specific number of
 pointers
 
-
 https://user-images.githubusercontent.com/35650605/167546558-2779728f-d675-4499-b852-a0638c1cc8aa.mp4
-
-
-
 
 ## Modifier.pointerMotionEvents
 
 Creates a modifier for processing pointer motion input within the region of the modified element.
 
-After `AwaitPointerEventScope.awaitFirstDown` returns a `PointerInputChange` followed by `onDown` 
- at first pointer contact. Moving any pointer
-invokes `AwaitPointerEventScope.awaitPointerEvent` then `onMove` is called. When last pointer is
-up `onUp` is called. 
+After `AwaitPointerEventScope.awaitFirstDown` returns a `PointerInputChange` followed by `onDown`
+at first pointer contact. Moving any pointer invokes `AwaitPointerEventScope.awaitPointerEvent`
+then `onMove` is called. When last pointer is up `onUp` is called.
 
 To prevent other pointer functions that call `awaitFirstDown`
-or `awaitPointerEvent` (scroll, swipe, detect functions) 
-call `PointerInputChange.consume()` in `onDown`, and
-call `PointerInputChange.consume()` in `onMove` block.
+or `awaitPointerEvent` (scroll, swipe, detect functions)
+call `PointerInputChange.consume()` in `onDown`, and call `PointerInputChange.consume()` in `onMove`
+block.
 
 ```kotlin
 fun Modifier.pointerMotionEvents(
@@ -51,11 +46,11 @@ fun Modifier.pointerMotionEventList(
 ) 
 ```
 
-* `delayAfterDownInMillis` parameter invokes Coroutines delay between `onDown`, and `onMove`.
-  There is a delay about 20ms between in View's `onTouchEvent` first touch and move, similar delay might
+* `delayAfterDownInMillis` parameter invokes Coroutines delay between `onDown`, and `onMove`. There
+  is a delay about 20ms between in View's `onTouchEvent` first touch and move, similar delay might
   be required with Compose too, especially when drawing to `Canvas` which misses very fast events,
-  Delaying move behavior might be required to detect whether is touch is in
-  required region of Composable at first pointer contact.
+  Delaying move behavior might be required to detect whether is touch is in required region of
+  Composable at first pointer contact.
 
 `PointerInputChange` down and move events should be consumed if you need to prevent other gestures
 like **scroll** or other **pointerInput**s to not intercept your gesture
@@ -108,11 +103,12 @@ Modifier.pointerInput(Unit) {
 ```
 
 ## Modifier.detectPointerTransformGestures
-Transform gesture as `detectTransformGestures` except with `gestureEnd` callback, returns
-number of pointers that are down and checks for requisite and number of pointers before continuing
-transform gestures. when requisite is not met gesture is on hold and ends when last pointer
-is up. This might be useful in scenarios like not panning when pointer number is higher than 1,
-or scenarios require specific conditions to be met
+
+Transform gesture as `detectTransformGestures` except with `gestureEnd` callback, returns number of
+pointers that are down and checks for requisite and number of pointers before continuing transform
+gestures. when requisite is not met gesture is on hold and ends when last pointer is up. This might
+be useful in scenarios like not panning when pointer number is higher than 1, or scenarios require
+specific conditions to be met
 
 ```kotlin
 Modifier
@@ -133,6 +129,11 @@ Modifier
         )
     }
 ```
+
+## Gesture Tutorial
+
+If you need more detailed tutorial about Jetpack Compose gestures
+check [this tutorial](https://github.com/SmartToolFactory/Jetpack-Compose-Tutorials#gesture)
 
 ## Gradle Setup
 
