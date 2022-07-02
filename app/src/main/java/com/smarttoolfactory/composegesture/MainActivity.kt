@@ -18,10 +18,12 @@ import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.PagerState
 import com.google.accompanist.pager.rememberPagerState
 import com.smarttoolfactory.composegesture.demo.MoveMotionEventDemo
+import com.smarttoolfactory.composegesture.demo.TouchDelegateDemo
 import com.smarttoolfactory.composegesture.demo.TransformMotionEventDemo
 import com.smarttoolfactory.composegesture.ui.theme.ComposeGestureExtendedTheme
 import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalPagerApi::class)
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -78,8 +80,8 @@ private fun HomeContent() {
 
         when (page) {
             0 -> MoveMotionEventDemo()
-            else -> TransformMotionEventDemo()
-
+            1 -> TransformMotionEventDemo()
+            else -> TouchDelegateDemo()
         }
     }
 }
@@ -88,4 +90,5 @@ internal val tabList =
     listOf(
         "Motion Events",
         "Transform Gestures",
+        "TouchDelegate",
     )

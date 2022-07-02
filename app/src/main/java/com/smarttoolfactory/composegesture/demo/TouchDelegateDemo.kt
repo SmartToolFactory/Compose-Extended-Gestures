@@ -6,6 +6,8 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -14,6 +16,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.smarttoolfactory.composegesture.R
 import com.smarttoolfactory.gesture.DelegateRect
 import com.smarttoolfactory.gesture.touchDelegate
@@ -30,6 +33,12 @@ fun TouchDelegateDemo() {
     ) {
 
         Spacer(modifier = Modifier.height(40.dp))
+
+        Text(
+            text ="touchDelegate with positive values",
+            fontSize = 18.sp,
+            color = MaterialTheme.colors.primary
+        )
 
         Image(
             modifier = Modifier
@@ -54,6 +63,11 @@ fun TouchDelegateDemo() {
 
         Spacer(modifier = Modifier.height(40.dp))
 
+        Text(
+            text ="touchDelegate with negative values",
+            fontSize = 18.sp,
+            color = MaterialTheme.colors.primary
+        )
 
         Box(
             modifier = Modifier

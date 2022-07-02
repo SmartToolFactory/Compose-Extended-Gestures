@@ -2,6 +2,7 @@ package com.smarttoolfactory.composegesture.demo
 
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -17,10 +18,11 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.smarttoolfactory.composegesture.R
 import com.smarttoolfactory.gesture.PointerRequisite
 import com.smarttoolfactory.gesture.detectPointerTransformGestures
-import com.smarttoolfactory.gesture.detectTransformGesturesAndChanges
+import com.smarttoolfactory.gesture.detectTransformGestures
 import java.text.DecimalFormat
 import kotlin.math.cos
 import kotlin.math.sin
@@ -32,26 +34,37 @@ fun TransformMotionEventDemo() {
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
     ) {
-        Text("detectTransformGesturesAndChanges returns gesture end callback " +
-                "and list of PointerInputChange" +
-                "in onGesture. PointerInputChange contains ifo about positions, " +
-                "whether event has been consumed or pressed or previously pressed")
+        println()
 
-        DetectTransformGesturesAndChanges()
-        Spacer(modifier = Modifier.height(50.dp))
-        Text("detectPointerTransformGestures returns gesture end callback" +
-                " and number of pointers that are down in onGesture.\n" +
-                "numberOfPointers = 1  is quantity" +
-                "requisite = PointerRequisite.GreaterThan is requirement that how numberOfPointers " +
-                "should" +
-                "be evaluated. If it's greater we need at least 2 pointer to commence gesture" +
-                "None overrides any requirements and it acts as detectTransformGesturesAndChanges")
-        DetectPointerTransformGestures()
+        Spacer(modifier = Modifier.height(40.dp))
+        Text(
+            text = "detectTransformGestures",
+            fontSize = 18.sp,
+            color = MaterialTheme.colors.primary
+        )
+
+        DetectTransformGesturesSample()
+        Spacer(modifier = Modifier.height(40.dp))
+        Text(
+            text = "detectPointerTransformGestures",
+            fontSize = 18.sp,
+            color = MaterialTheme.colors.primary
+        )
+        DetectPointerTransformGesturesSample()
+        Spacer(modifier = Modifier.height(40.dp))
+
     }
 }
 
+/**
+ *  detectTransformGesturesAndChanges has callbacks to notify when gesture started, when it's on
+ *  and when it's over.
+ *  When gesture is on it returns same data detectTranformGestures does and also returns
+ *  main pointer and all of the pointers that are down for transform gestures such as pinch,
+ *  zoom or rotation
+ */
 @Composable
-private fun DetectTransformGesturesAndChanges() {
+private fun DetectTransformGesturesSample() {
     val decimalFormat = remember { DecimalFormat("0.0") }
 
     var zoom by remember { mutableStateOf(1f) }
@@ -69,14 +82,19 @@ private fun DetectTransformGesturesAndChanges() {
         )
     }
     val imageModifier = Modifier
-        .border(2.dp, borderColor)
+        .border(3.dp, borderColor)
         .fillMaxSize()
         .pointerInput(Unit) {
-            detectTransformGesturesAndChanges(
+            detectTransformGestures(
+                onGestureStart = {
+                    borderColor = Color.Yellow
+                    transformDetailText = "GESTURE START"
+                },
                 onGesture = { gestureCentroid: Offset,
                               gesturePan: Offset,
                               gestureZoom: Float,
                               gestureRotate: Float,
+                              mainPointerInputChange: PointerInputChange,
                               pointerList: List<PointerInputChange> ->
                     val oldScale = zoom
                     val newScale = zoom * gestureZoom
@@ -124,12 +142,13 @@ private fun DetectTransformGesturesAndChanges() {
 }
 
 @Composable
-private fun DetectPointerTransformGestures() {
+private fun DetectPointerTransformGesturesSample() {
     val decimalFormat = remember { DecimalFormat("0.0") }
 
     var zoom by remember { mutableStateOf(1f) }
     var offset by remember { mutableStateOf(Offset.Zero) }
     var centroid by remember { mutableStateOf(Offset.Zero) }
+    var activePointer by remember { mutableStateOf(Offset.Zero) }
     var angle by remember { mutableStateOf(0f) }
 
     var borderColor by remember { mutableStateOf(Color.LightGray) }
@@ -142,17 +161,22 @@ private fun DetectPointerTransformGestures() {
         )
     }
     val imageModifier = Modifier
-        .border(2.dp, borderColor)
+        .border(3.dp, borderColor)
         .fillMaxSize()
         .pointerInput(Unit) {
             detectPointerTransformGestures(
                 numberOfPointers = 1,
                 requisite = PointerRequisite.GreaterThan,
+                onGestureStart = {
+                    borderColor = Color.Yellow
+                    transformDetailText = "GESTURE START"
+                },
                 onGesture = { gestureCentroid: Offset,
                               gesturePan: Offset,
                               gestureZoom: Float,
                               gestureRotate: Float,
-                              numberOfPointers: Int ->
+                              mainPointerInputChange: PointerInputChange,
+                              pointerList: List<PointerInputChange> ->
                     val oldScale = zoom
                     val newScale = zoom * gestureZoom
 
@@ -168,8 +192,11 @@ private fun DetectPointerTransformGestures() {
                     angle += gestureRotate
 
                     centroid = gestureCentroid
+
+                    activePointer = mainPointerInputChange.position
+
                     transformDetailText =
-                        "Number of pointers: $numberOfPointers\n" +
+                        "Number of pointers: ${pointerList.size}\n" +
                                 "Zoom: ${decimalFormat.format(zoom)}, centroid: $gestureCentroid\n" +
                                 "angle: ${decimalFormat.format(angle)}, " +
                                 "Rotate: ${decimalFormat.format(gestureRotate)}, pan: $gesturePan"
@@ -179,12 +206,17 @@ private fun DetectPointerTransformGestures() {
                 onGestureEnd = {
                     borderColor = Color.LightGray
                     transformDetailText = "GESTURE END"
+                },
+                onGestureCancel = {
+                    borderColor = Color.LightGray
+                    transformDetailText = "GESTURE CANCEL"
                 }
             )
         }
         .drawWithContent {
             drawContent()
             drawCircle(color = Color.Red, center = centroid, radius = 20f)
+            drawCircle(color = Color.Blue, center = activePointer, radius = 20f)
         }
         .graphicsLayer {
             translationX = -offset.x * zoom

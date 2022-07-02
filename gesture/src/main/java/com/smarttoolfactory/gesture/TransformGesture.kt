@@ -34,7 +34,7 @@ enum class PointerRequisite {
  */
 suspend fun PointerInputScope.detectTransformGestures(
     panZoomLock: Boolean = false,
-    consume: Boolean = false,
+    consume: Boolean = true,
     onGestureStart: (PointerInputChange) -> Unit = {},
     onGesture: (
         centroid: Offset,
