@@ -34,7 +34,6 @@ fun TransformMotionEventDemo() {
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
     ) {
-        println()
 
         Spacer(modifier = Modifier.height(40.dp))
         Text(
@@ -84,47 +83,47 @@ private fun DetectTransformGesturesSample() {
     val imageModifier = Modifier
         .border(3.dp, borderColor)
         .fillMaxSize()
-        .pointerInput(Unit) {
-            detectTransformGestures(
-                onGestureStart = {
-                    borderColor = Color.Yellow
-                    transformDetailText = "GESTURE START"
-                },
-                onGesture = { gestureCentroid: Offset,
-                              gesturePan: Offset,
-                              gestureZoom: Float,
-                              gestureRotate: Float,
-                              mainPointerInputChange: PointerInputChange,
-                              pointerList: List<PointerInputChange> ->
-                    val oldScale = zoom
-                    val newScale = zoom * gestureZoom
+.pointerInput(Unit) {
+    detectTransformGestures(
+        onGestureStart = {
+            borderColor = Color.Yellow
+            transformDetailText = "GESTURE START"
+        },
+        onGesture = { gestureCentroid: Offset,
+                      gesturePan: Offset,
+                      gestureZoom: Float,
+                      gestureRotate: Float,
+                      mainPointerInputChange: PointerInputChange,
+                      pointerList: List<PointerInputChange> ->
+            val oldScale = zoom
+            val newScale = zoom * gestureZoom
 
-                    // For natural zooming and rotating, the centroid of the gesture should
-                    // be the fixed point where zooming and rotating occurs.
-                    // We compute where the centroid was (in the pre-transformed coordinate
-                    // space), and then compute where it will be after this delta.
-                    // We then compute what the new offset should be to keep the centroid
-                    // visually stationary for rotating and zooming, and also apply the pan.
-                    offset = (offset + gestureCentroid / oldScale).rotateBy(gestureRotate) -
-                            (gestureCentroid / newScale + gesturePan / oldScale)
-                    zoom = newScale.coerceIn(0.5f..5f)
-                    angle += gestureRotate
+            // For natural zooming and rotating, the centroid of the gesture should
+            // be the fixed point where zooming and rotating occurs.
+            // We compute where the centroid was (in the pre-transformed coordinate
+            // space), and then compute where it will be after this delta.
+            // We then compute what the new offset should be to keep the centroid
+            // visually stationary for rotating and zooming, and also apply the pan.
+            offset = (offset + gestureCentroid / oldScale).rotateBy(gestureRotate) -
+                    (gestureCentroid / newScale + gesturePan / oldScale)
+            zoom = newScale.coerceIn(0.5f..5f)
+            angle += gestureRotate
 
-                    centroid = gestureCentroid
-                    transformDetailText =
-                        "PointerInputChange list: ${pointerList.size}\n" +
-                                "Zoom: ${decimalFormat.format(zoom)}, centroid: $gestureCentroid\n" +
-                                "angle: ${decimalFormat.format(angle)}, " +
-                                "Rotate: ${decimalFormat.format(gestureRotate)}, pan: $gesturePan"
+            centroid = gestureCentroid
+            transformDetailText =
+                "PointerInputChange list: ${pointerList.size}\n" +
+                        "Zoom: ${decimalFormat.format(zoom)}, centroid: $gestureCentroid\n" +
+                        "angle: ${decimalFormat.format(angle)}, " +
+                        "Rotate: ${decimalFormat.format(gestureRotate)}, pan: $gesturePan"
 
-                    borderColor = Color.Green
-                },
-                onGestureEnd = {
-                    borderColor = Color.LightGray
-                    transformDetailText = "GESTURE END"
-                }
-            )
+            borderColor = Color.Green
+        },
+        onGestureEnd = {
+            borderColor = Color.LightGray
+            transformDetailText = "GESTURE END"
         }
+    )
+}
         .drawWithContent {
             drawContent()
             drawCircle(color = Color.Red, center = centroid, radius = 20f)

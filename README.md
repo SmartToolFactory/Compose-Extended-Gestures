@@ -7,7 +7,9 @@ pointers
 
 https://user-images.githubusercontent.com/35650605/167546558-2779728f-d675-4499-b852-a0638c1cc8aa.mp4
 
-## Modifier.pointerMotionEvents
+## onTouch Event for Jetpack Compose
+
+### Modifier.pointerMotionEvents
 
 Creates a modifier for processing pointer motion input within the region of the modified element.
 
@@ -33,6 +35,8 @@ fun Modifier.pointerMotionEvents(
     }
 )
 ```
+
+### Modifier.pointerMotionEventList
 
 pointerMotionEventList returns list of pointers in `onMove`
 
@@ -71,6 +75,7 @@ like **scroll** or other **pointerInput**s to not intercept your gesture
 
 You can refer [this answer](https://stackoverflow.com/a/70847531/5457853) for details.
 
+## Transform Gestures
 ## Modifier.detectTransformGesturesAndChanges
 
 A gesture detector for rotation, panning, and zoom. Once touch slop has been reached, the user can
@@ -81,24 +86,31 @@ This will consume all position changes after touch slop has been reached. onGest
 provide centroid of all the pointers that are down.
 
 After gesture started when last pointer is up `onGestureEnd` is triggered.
-`pointerList` returns info about pointers that are available to this gesture
+`pointerList` returns info about pointers that are available to this gesture. 
+`mainPointerInputChange` is the first pointer that is down initially, if it's lifted while
+other pointers are down `mainPointer` is set the first one in `pointerList`
 
 Usage
 
 ```kotlin
 Modifier.pointerInput(Unit) {
-    detectTransformGesturesAndChanges(
-        onGesture = { gestureCentroid: Offset,
-                      gesturePan: Offset,
-                      gestureZoom: Float,
-                      gestureRotate: Float,
-                      pointerList: List<PointerInputChange> ->
-
-        },
-        onGestureEnd = {
-            transformDetailText = "GESTURE END"
-        }
-    )
+  detectTransformGestures(
+    onGestureStart = {
+      transformDetailText = "GESTURE START"
+    },
+    onGesture = { gestureCentroid: Offset,
+                  gesturePan: Offset,
+                  gestureZoom: Float,
+                  gestureRotate: Float,
+                  mainPointerInputChange: PointerInputChange,
+                  pointerList: List<PointerInputChange> ->
+     
+    },
+    onGestureEnd = {
+      borderColor = Color.LightGray
+      transformDetailText = "GESTURE END"
+    }
+  )
 }
 ```
 
@@ -116,6 +128,9 @@ Modifier
         detectPointerTransformGestures(
             numberOfPointers = 1,
             requisite = PointerRequisite.GreaterThan,
+          onGestureStart = {
+            transformDetailText = "GESTURE START"
+          },
             onGesture = { gestureCentroid: Offset,
                           gesturePan: Offset,
                           gestureZoom: Float,
@@ -129,6 +144,47 @@ Modifier
         )
     }
 ```
+
+## TouchDelegate for Jetpack Compose
+Modifier to handle situations where you want a view to have a larger touch area than  
+its actual Composable bounds. [dpRect] increases when values are positive and  
+decreases touch area by negative values entered for any side
+
+```
+fun Modifier.touchDelegate(
+    dpRect: DelegateRect = DelegateRect.Zero,
+    enabled: Boolean = true,
+    onClickLabel: String? = null,
+    role: Role? = null,
+    onClick: () -> Unit
+) =
+    composed(
+        inspectorInfo = {
+            name = "touchDelegate"
+            properties["dpRect"] = dpRect
+            properties["enabled"] = enabled
+            properties["onClickLabel"] = onClickLabel
+            properties["role"] = role
+            properties["onClick"] = onClick
+        },
+        factory = {
+
+            Modifier.touchDelegate(
+                dpRect = dpRect,
+                enabled = enabled,
+                onClickLabel = onClickLabel,
+                onClick = onClick,
+                role = role,
+                indication = LocalIndication.current,
+                interactionSource = remember { MutableInteractionSource() }
+            )
+        }
+    )
+```
+
+To increase touch area of Composable without changing its dimensions and scale
+set a `DelegateRect(left,top,right,bottom)` with positive values to increase touch area on
+sides specified by rectangle or negative values to decrease touch area.
 
 ## Gesture Tutorial
 
