@@ -5,7 +5,10 @@
 Counterpart of `onTouchEvent` for Jetpack Compose and transform gesture with specific number of
 pointers
 
-https://user-images.githubusercontent.com/35650605/167546558-2779728f-d675-4499-b852-a0638c1cc8aa.mp4
+
+https://user-images.githubusercontent.com/35650605/177026717-2819c0dd-e43d-466f-bfc0-2dcad268ae40.mp4
+
+
 
 ## onTouch Event for Jetpack Compose
 
