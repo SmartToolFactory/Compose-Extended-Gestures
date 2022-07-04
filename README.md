@@ -78,7 +78,7 @@ like **scroll** or other **pointerInput**s to not intercept your gesture
 You can refer [this answer](https://stackoverflow.com/a/70847531/5457853) for details.
 
 ## Transform Gestures
-## Modifier.detectTransformGesturesAndChanges
+### detectTransformGesturesAndChanges
 
 A gesture detector for rotation, panning, and zoom. Once touch slop has been reached, the user can
 use rotation, panning and zoom gestures. `onGesture` will be called when any of the rotation, zoom
@@ -116,7 +116,7 @@ Modifier.pointerInput(Unit) {
 }
 ```
 
-## Modifier.detectPointerTransformGestures
+### detectPointerTransformGestures
 
 Transform gesture as `detectTransformGestures` except with `gestureEnd` callback, returns number of
 pointers that are down and checks for requisite and number of pointers before continuing transform
