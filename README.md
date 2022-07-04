@@ -2,8 +2,7 @@
 
 [![](https://jitpack.io/v/SmartToolFactory/Compose-Extended-Gestures.svg)](https://jitpack.io/#SmartToolFactory/Compose-Extended-Gestures)
 
-Counterpart of `onTouchEvent` for Jetpack Compose and transform gesture with specific number of
-pointers
+Jetpack Compose gesture library that expands avaiable gesture functions with onTouchEvent counterpart of event, transform and touch delegate gestures.
 
 
 https://user-images.githubusercontent.com/35650605/177026717-2819c0dd-e43d-466f-bfc0-2dcad268ae40.mp4
