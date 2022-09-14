@@ -1,7 +1,9 @@
 package com.smarttoolfactory.gesture
 
-import androidx.compose.foundation.gestures.*
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.forEachGesture
 import androidx.compose.ui.input.pointer.*
+import androidx.compose.ui.input.pointer.PointerEventPass.*
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -25,14 +27,37 @@ import kotlinx.coroutines.launch
  * required Composables like **Canvas** to process [onDown] before [onMove]
  * @param requireUnconsumed is `true` and the first
  * down is consumed in the [PointerEventPass.Main] pass, that gesture is ignored.
+ * @param pass The enumeration of passes where [PointerInputChange]
+ * traverses up and down the UI tree.
+ *
+ * PointerInputChanges traverse throw the hierarchy in the following passes:
+ *
+ * 1. [Initial]: Down the tree from ancestor to descendant.
+ * 2. [Main]: Up the tree from descendant to ancestor.
+ * 3. [Final]: Down the tree from ancestor to descendant.
+ *
+ * These passes serve the following purposes:
+ *
+ * 1. Initial: Allows ancestors to consume aspects of [PointerInputChange] before descendants.
+ * This is where, for example, a scroller may block buttons from getting tapped by other fingers
+ * once scrolling has started.
+ * 2. Main: The primary pass where gesture filters should react to and consume aspects of
+ * [PointerInputChange]s. This is the primary path where descendants will interact with
+ * [PointerInputChange]s before parents. This allows for buttons to respond to a tap before a
+ * container of the bottom to respond to a tap.
+ * 3. Final: This pass is where children can learn what aspects of [PointerInputChange]s were
+ * consumed by parents during the [Main] pass. For example, this is how a button determines that
+ * it should no longer respond to fingers lifting off of it because a parent scroller has
+ * consumed movement in a [PointerInputChange].
  */
 suspend fun PointerInputScope.detectMotionEvents(
     onDown: (PointerInputChange) -> Unit = {},
     onMove: (PointerInputChange) -> Unit = {},
     onUp: (PointerInputChange) -> Unit = {},
     delayAfterDownInMillis: Long = 0L,
-    requireUnconsumed: Boolean = true
-    ) {
+    requireUnconsumed: Boolean = true,
+    pass: PointerEventPass = PointerEventPass.Main
+) {
 
     coroutineScope {
         forEachGesture {
@@ -56,7 +81,7 @@ suspend fun PointerInputScope.detectMotionEvents(
 
                 while (true) {
 
-                    val event: PointerEvent = awaitPointerEvent()
+                    val event: PointerEvent = awaitPointerEvent(pass)
 
                     val anyPressed = event.changes.any { it.pressed }
 
@@ -107,6 +132,28 @@ suspend fun PointerInputScope.detectMotionEvents(
  * required Composables like **Canvas** to process [onDown] before [onMove]
  * @param requireUnconsumed is `true` and the first
  * down is consumed in the [PointerEventPass.Main] pass, that gesture is ignored.
+ * @param pass The enumeration of passes where [PointerInputChange]
+ * traverses up and down the UI tree.
+ *
+ * PointerInputChanges traverse throw the hierarchy in the following passes:
+ *
+ * 1. [Initial]: Down the tree from ancestor to descendant.
+ * 2. [Main]: Up the tree from descendant to ancestor.
+ * 3. [Final]: Down the tree from ancestor to descendant.
+ *
+ * These passes serve the following purposes:
+ *
+ * 1. Initial: Allows ancestors to consume aspects of [PointerInputChange] before descendants.
+ * This is where, for example, a scroller may block buttons from getting tapped by other fingers
+ * once scrolling has started.
+ * 2. Main: The primary pass where gesture filters should react to and consume aspects of
+ * [PointerInputChange]s. This is the primary path where descendants will interact with
+ * [PointerInputChange]s before parents. This allows for buttons to respond to a tap before a
+ * container of the bottom to respond to a tap.
+ * 3. Final: This pass is where children can learn what aspects of [PointerInputChange]s were
+ * consumed by parents during the [Main] pass. For example, this is how a button determines that
+ * it should no longer respond to fingers lifting off of it because a parent scroller has
+ * consumed movement in a [PointerInputChange].
  *
  */
 suspend fun PointerInputScope.detectMotionEventsAsList(
@@ -114,7 +161,8 @@ suspend fun PointerInputScope.detectMotionEventsAsList(
     onMove: (List<PointerInputChange>) -> Unit = {},
     onUp: (PointerInputChange) -> Unit = {},
     delayAfterDownInMillis: Long = 0L,
-    requireUnconsumed: Boolean = true
+    requireUnconsumed: Boolean = true,
+    pass: PointerEventPass = PointerEventPass.Main
 ) {
 
     coroutineScope {
@@ -139,7 +187,7 @@ suspend fun PointerInputScope.detectMotionEventsAsList(
 
                 while (true) {
 
-                    val event: PointerEvent = awaitPointerEvent()
+                    val event: PointerEvent = awaitPointerEvent(pass)
 
                     val anyPressed = event.changes.any { it.pressed }
 

@@ -1,8 +1,11 @@
 package com.smarttoolfactory.composegesture.demo
 
 import android.graphics.Paint
-import androidx.compose.foundation.*
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
@@ -55,15 +58,6 @@ private fun PointerMotionEventsSample() {
     // Path is what is used for drawing line on Canvas
     val path = remember { Path() }
 
-    // color and text are for debugging and observing state changes and position
-    var gestureColor by remember { mutableStateOf(Color.White) }
-
-    // Draw state on canvas as text when set to true
-    val debug = true
-
-    // This text is drawn to Canvas
-    val canvasText = remember { StringBuilder() }
-
     val paint = remember {
         Paint().apply {
             textSize = 40f
@@ -71,25 +65,24 @@ private fun PointerMotionEventsSample() {
         }
     }
 
-    val drawModifier = canvasModifier
+    val drawModifier = Modifier
+        .fillMaxWidth()
+        .height(300.dp)
+        .clipToBounds()
         .background(Color.White)
-        .border(3.dp, gestureColor)
         .pointerMotionEvents(
             onDown = { pointerInputChange: PointerInputChange ->
                 currentPosition = pointerInputChange.position
                 motionEvent = MotionEvent.Down
-                gestureColor = Color.Yellow
                 pointerInputChange.consume()
             },
             onMove = { pointerInputChange: PointerInputChange ->
                 currentPosition = pointerInputChange.position
                 motionEvent = MotionEvent.Move
-                gestureColor = Color.Green
                 pointerInputChange.consume()
             },
             onUp = { pointerInputChange: PointerInputChange ->
                 motionEvent = MotionEvent.Up
-                gestureColor = Color.White
                 pointerInputChange.consume()
             },
             delayAfterDownInMillis = 25L
@@ -102,8 +95,6 @@ private fun PointerMotionEventsSample() {
             MotionEvent.Down -> {
                 path.moveTo(currentPosition.x, currentPosition.y)
                 previousPosition = currentPosition
-                canvasText.clear()
-                canvasText.append("MotionEvent.Down pos: $currentPosition\n")
             }
 
             MotionEvent.Move -> {
@@ -114,22 +105,17 @@ private fun PointerMotionEventsSample() {
                     (previousPosition.y + currentPosition.y) / 2
 
                 )
-                canvasText.append("MotionEvent.Move pos: $currentPosition\n")
-
                 previousPosition = currentPosition
             }
 
             MotionEvent.Up -> {
                 path.lineTo(currentPosition.x, currentPosition.y)
-                canvasText.append("MotionEvent.Up pos: $currentPosition\n")
                 currentPosition = Offset.Unspecified
                 previousPosition = currentPosition
                 motionEvent = MotionEvent.Idle
             }
 
-            else -> {
-                canvasText.append("MotionEvent.Idle\n")
-            }
+            else -> Unit
         }
 
         drawPath(
@@ -137,10 +123,6 @@ private fun PointerMotionEventsSample() {
             path = path,
             style = Stroke(width = 4.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
         )
-
-        if (debug) {
-            drawText(text = canvasText.toString(), x = 0f, y = 60f, paint)
-        }
     }
 }
 
