@@ -14,5 +14,5 @@ dependencyResolutionManagement {
     }
 }
 rootProject.name = "Compose Gesture Extended"
-include ':app'
+//include ':app'
 include ':gesture'
