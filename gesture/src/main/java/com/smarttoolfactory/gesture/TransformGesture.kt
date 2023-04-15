@@ -1,8 +1,17 @@
 package com.smarttoolfactory.gesture
 
-import androidx.compose.foundation.gestures.*
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.calculateCentroid
+import androidx.compose.foundation.gestures.calculateCentroidSize
+import androidx.compose.foundation.gestures.calculatePan
+import androidx.compose.foundation.gestures.calculateRotation
+import androidx.compose.foundation.gestures.calculateZoom
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.input.pointer.*
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.PointerInputChange
+import androidx.compose.ui.input.pointer.PointerInputScope
+import androidx.compose.ui.input.pointer.positionChanged
 import kotlin.math.PI
 import kotlin.math.abs
 
@@ -22,7 +31,9 @@ enum class PointerRequisite {
  *
  * @param consume flag consume [PointerInputChange]s this gesture uses. Consuming
  * returns [PointerInputChange.isConsumed] true which is observed by other gestures such
- * as drag, scroll and transform. When this flag is true other gesture don't receive events
+ * as drag, scroll and transform. When this flag is true other gesture don't receive events.
+ * @param pass The enumeration of passes where [PointerInputChange]
+ * traverses up and down the UI tree.
  * @param onGestureStart callback for notifying transform gesture has started with initial
  * pointer
  * @param onGesture callback for passing centroid, pan, zoom, rotation and  main pointer and
@@ -35,6 +46,7 @@ enum class PointerRequisite {
 suspend fun PointerInputScope.detectTransformGestures(
     panZoomLock: Boolean = false,
     consume: Boolean = true,
+    pass: PointerEventPass = PointerEventPass.Main,
     onGestureStart: (PointerInputChange) -> Unit = {},
     onGesture: (
         centroid: Offset,
@@ -46,98 +58,98 @@ suspend fun PointerInputScope.detectTransformGestures(
     ) -> Unit,
     onGestureEnd: (PointerInputChange) -> Unit = {}
 ) {
-    forEachGesture {
-        awaitPointerEventScope {
-            var rotation = 0f
-            var zoom = 1f
-            var pan = Offset.Zero
-            var pastTouchSlop = false
-            val touchSlop = viewConfiguration.touchSlop
-            var lockedToPanZoom = false
+    awaitEachGesture {
+        var rotation = 0f
+        var zoom = 1f
+        var pan = Offset.Zero
+        var pastTouchSlop = false
+        val touchSlop = viewConfiguration.touchSlop
+        var lockedToPanZoom = false
 
+        // Wait for at least one pointer to press down, and set first contact position
+        val down: PointerInputChange = awaitFirstDown(
+            requireUnconsumed = false,
+            pass = pass
+        )
+        onGestureStart(down)
 
-            // Wait for at least one pointer to press down, and set first contact position
-            val down: PointerInputChange = awaitFirstDown(requireUnconsumed = false)
-            onGestureStart(down)
+        var pointer = down
+        // Main pointer is the one that is down initially
+        var pointerId = down.id
 
-            var pointer = down
-            // Main pointer is the one that is down initially
-            var pointerId = down.id
+        do {
+            val event = awaitPointerEvent(pass = pass)
 
-            do {
-                val event = awaitPointerEvent()
+            // If any position change is consumed from another PointerInputChange
+            // or pointer count requirement is not fulfilled
+            val canceled =
+                event.changes.any { it.isConsumed }
 
-                // If any position change is consumed from another PointerInputChange
-                // or pointer count requirement is not fulfilled
-                val canceled =
-                    event.changes.any { it.isConsumed }
+            if (!canceled) {
 
-                if (!canceled) {
+                // Get pointer that is down, if first pointer is up
+                // get another and use it if other pointers are also down
+                // event.changes.first() doesn't return same order
+                val pointerInputChange =
+                    event.changes.firstOrNull { it.id == pointerId }
+                        ?: event.changes.first()
 
-                    // Get pointer that is down, if first pointer is up
-                    // get another and use it if other pointers are also down
-                    // event.changes.first() doesn't return same order
-                    val pointerInputChange =
-                        event.changes.firstOrNull { it.id == pointerId }
-                            ?: event.changes.first()
+                // Next time will check same pointer with this id
+                pointerId = pointerInputChange.id
+                pointer = pointerInputChange
 
-                    // Next time will check same pointer with this id
-                    pointerId = pointerInputChange.id
-                    pointer = pointerInputChange
+                val zoomChange = event.calculateZoom()
+                val rotationChange = event.calculateRotation()
+                val panChange = event.calculatePan()
 
-                    val zoomChange = event.calculateZoom()
-                    val rotationChange = event.calculateRotation()
-                    val panChange = event.calculatePan()
+                if (!pastTouchSlop) {
+                    zoom *= zoomChange
+                    rotation += rotationChange
+                    pan += panChange
 
-                    if (!pastTouchSlop) {
-                        zoom *= zoomChange
-                        rotation += rotationChange
-                        pan += panChange
+                    val centroidSize = event.calculateCentroidSize(useCurrent = false)
+                    val zoomMotion = abs(1 - zoom) * centroidSize
+                    val rotationMotion =
+                        abs(rotation * PI.toFloat() * centroidSize / 180f)
+                    val panMotion = pan.getDistance()
 
-                        val centroidSize = event.calculateCentroidSize(useCurrent = false)
-                        val zoomMotion = abs(1 - zoom) * centroidSize
-                        val rotationMotion =
-                            abs(rotation * PI.toFloat() * centroidSize / 180f)
-                        val panMotion = pan.getDistance()
+                    if (zoomMotion > touchSlop ||
+                        rotationMotion > touchSlop ||
+                        panMotion > touchSlop
+                    ) {
+                        pastTouchSlop = true
+                        lockedToPanZoom = panZoomLock && rotationMotion < touchSlop
+                    }
+                }
 
-                        if (zoomMotion > touchSlop ||
-                            rotationMotion > touchSlop ||
-                            panMotion > touchSlop
-                        ) {
-                            pastTouchSlop = true
-                            lockedToPanZoom = panZoomLock && rotationMotion < touchSlop
-                        }
+                if (pastTouchSlop) {
+                    val centroid = event.calculateCentroid(useCurrent = false)
+                    val effectiveRotation = if (lockedToPanZoom) 0f else rotationChange
+                    if (effectiveRotation != 0f ||
+                        zoomChange != 1f ||
+                        panChange != Offset.Zero
+                    ) {
+                        onGesture(
+                            centroid,
+                            panChange,
+                            zoomChange,
+                            effectiveRotation,
+                            pointer,
+                            event.changes
+                        )
                     }
 
-                    if (pastTouchSlop) {
-                        val centroid = event.calculateCentroid(useCurrent = false)
-                        val effectiveRotation = if (lockedToPanZoom) 0f else rotationChange
-                        if (effectiveRotation != 0f ||
-                            zoomChange != 1f ||
-                            panChange != Offset.Zero
-                        ) {
-                            onGesture(
-                                centroid,
-                                panChange,
-                                zoomChange,
-                                effectiveRotation,
-                                pointer,
-                                event.changes
-                            )
-                        }
-
-                        if (consume) {
-                            event.changes.forEach {
-                                if (it.positionChanged()) {
-                                    it.consume()
-                                }
+                    if (consume) {
+                        event.changes.forEach {
+                            if (it.positionChanged()) {
+                                it.consume()
                             }
                         }
                     }
                 }
-            } while (!canceled && event.changes.any { it.pressed })
-            onGestureEnd(pointer)
-        }
+            }
+        } while (!canceled && event.changes.any { it.pressed })
+        onGestureEnd(pointer)
     }
 }
 
@@ -160,7 +172,9 @@ suspend fun PointerInputScope.detectTransformGestures(
  * not taken into consideration
  * @param consume flag consume [PointerInputChange]s this gesture uses. Consuming
  * returns [PointerInputChange.isConsumed] true which is observed by other gestures such
- * as drag, scroll and transform. When this flag is true other gesture don't receive events
+ * as drag, scroll and transform. When this flag is true other gesture don't receive events.
+ * @param pass The enumeration of passes where [PointerInputChange]
+ * traverses up and down the UI tree.
  * @param onGestureStart callback for notifying transform gesture has started with initial
  * pointer
  * @param onGesture callback for passing centroid, pan, zoom, rotation and pointer size to
@@ -172,6 +186,7 @@ suspend fun PointerInputScope.detectTransformGestures(
 suspend fun PointerInputScope.detectPointerTransformGestures(
     panZoomLock: Boolean = false,
     numberOfPointers: Int = 1,
+    pass: PointerEventPass = PointerEventPass.Main,
     requisite: PointerRequisite = PointerRequisite.None,
     consume: Boolean = true,
     onGestureStart: (PointerInputChange) -> Unit = {},
@@ -188,124 +203,130 @@ suspend fun PointerInputScope.detectPointerTransformGestures(
     onGestureCancel: () -> Unit = {},
 ) {
 
-    require(numberOfPointers > 0)
+    require(numberOfPointers > 0) {
+        "Number of minimum pointers should be greater than 0"
+    }
 
-    forEachGesture {
-        awaitPointerEventScope {
-            var rotation = 0f
-            var zoom = 1f
-            var pan = Offset.Zero
-            var pastTouchSlop = false
-            val touchSlop = viewConfiguration.touchSlop
-            var lockedToPanZoom = false
+    awaitEachGesture {
+        var rotation = 0f
+        var zoom = 1f
+        var pan = Offset.Zero
+        var pastTouchSlop = false
+        val touchSlop = viewConfiguration.touchSlop
+        var lockedToPanZoom = false
 
-            var gestureStarted = false
+        var gestureStarted = false
 
-            // Wait for at least one pointer to press down, and set first contact position
-            val down: PointerInputChange = awaitFirstDown(requireUnconsumed = false)
-            onGestureStart(down)
+        // Wait for at least one pointer to press down, and set first contact position
+        val down: PointerInputChange = awaitFirstDown(
+            requireUnconsumed = false,
+            pass = pass
+        )
+        onGestureStart(down)
 
-            var pointer = down
-            // Main pointer is the one that is down initially
-            var pointerId = down.id
+        var pointer = down
+        // Main pointer is the one that is down initially
+        var pointerId = down.id
 
 
-            do {
-                val event = awaitPointerEvent()
+        do {
+            val event = awaitPointerEvent(pass = pass)
 
-                val downPointerCount = event.changes.map {
-                    it.pressed
-                }.size
+            val downPointerCount = event.changes.map {
+                it.pressed
+            }.size
 
-                val requirementFulfilled = when (requisite) {
-                    PointerRequisite.LessThan -> {
-                        (downPointerCount < numberOfPointers)
-                    }
-                    PointerRequisite.EqualTo -> {
-                        (downPointerCount == numberOfPointers)
-                    }
-                    PointerRequisite.GreaterThan -> {
-                        (downPointerCount > numberOfPointers)
-                    }
-                    else -> true
+            val requirementFulfilled = when (requisite) {
+                PointerRequisite.LessThan -> {
+                    (downPointerCount < numberOfPointers)
                 }
 
-                // If any position change is consumed from another PointerInputChange
-                // or pointer count requirement is not fulfilled
-                val canceled =
-                    event.changes.any { it.isConsumed }
+                PointerRequisite.EqualTo -> {
+                    (downPointerCount == numberOfPointers)
+                }
 
-                if (!canceled && requirementFulfilled) {
+                PointerRequisite.GreaterThan -> {
+                    (downPointerCount > numberOfPointers)
+                }
 
-                    gestureStarted = true
-                    // Get pointer that is down, if first pointer is up
-                    // get another and use it if other pointers are also down
-                    // event.changes.first() doesn't return same order
-                    val pointerInputChange =
-                        event.changes.firstOrNull { it.id == pointerId }
-                            ?: event.changes.first()
+                else -> true
+            }
 
-                    // Next time will check same pointer with this id
-                    pointerId = pointerInputChange.id
-                    pointer = pointerInputChange
+            // If any position change is consumed from another PointerInputChange
+            // or pointer count requirement is not fulfilled
+            val canceled =
+                event.changes.any { it.isConsumed }
 
-                    val zoomChange = event.calculateZoom()
-                    val rotationChange = event.calculateRotation()
-                    val panChange = event.calculatePan()
+            if (!canceled && requirementFulfilled) {
 
-                    if (!pastTouchSlop) {
-                        zoom *= zoomChange
-                        rotation += rotationChange
-                        pan += panChange
+                gestureStarted = true
+                // Get pointer that is down, if first pointer is up
+                // get another and use it if other pointers are also down
+                // event.changes.first() doesn't return same order
+                val pointerInputChange =
+                    event.changes.firstOrNull { it.id == pointerId }
+                        ?: event.changes.first()
 
-                        val centroidSize = event.calculateCentroidSize(useCurrent = false)
-                        val zoomMotion = abs(1 - zoom) * centroidSize
-                        val rotationMotion =
-                            abs(rotation * PI.toFloat() * centroidSize / 180f)
-                        val panMotion = pan.getDistance()
+                // Next time will check same pointer with this id
+                pointerId = pointerInputChange.id
+                pointer = pointerInputChange
 
-                        if (zoomMotion > touchSlop ||
-                            rotationMotion > touchSlop ||
-                            panMotion > touchSlop
-                        ) {
-                            pastTouchSlop = true
-                            lockedToPanZoom = panZoomLock && rotationMotion < touchSlop
-                        }
+                val zoomChange = event.calculateZoom()
+                val rotationChange = event.calculateRotation()
+                val panChange = event.calculatePan()
+
+                if (!pastTouchSlop) {
+                    zoom *= zoomChange
+                    rotation += rotationChange
+                    pan += panChange
+
+                    val centroidSize = event.calculateCentroidSize(useCurrent = false)
+                    val zoomMotion = abs(1 - zoom) * centroidSize
+                    val rotationMotion =
+                        abs(rotation * PI.toFloat() * centroidSize / 180f)
+                    val panMotion = pan.getDistance()
+
+                    if (zoomMotion > touchSlop ||
+                        rotationMotion > touchSlop ||
+                        panMotion > touchSlop
+                    ) {
+                        pastTouchSlop = true
+                        lockedToPanZoom = panZoomLock && rotationMotion < touchSlop
+                    }
+                }
+
+                if (pastTouchSlop) {
+                    val centroid = event.calculateCentroid(useCurrent = false)
+                    val effectiveRotation = if (lockedToPanZoom) 0f else rotationChange
+                    if (effectiveRotation != 0f ||
+                        zoomChange != 1f ||
+                        panChange != Offset.Zero
+                    ) {
+                        onGesture(
+                            centroid,
+                            panChange,
+                            zoomChange,
+                            effectiveRotation,
+                            pointer,
+                            event.changes
+                        )
                     }
 
-                    if (pastTouchSlop) {
-                        val centroid = event.calculateCentroid(useCurrent = false)
-                        val effectiveRotation = if (lockedToPanZoom) 0f else rotationChange
-                        if (effectiveRotation != 0f ||
-                            zoomChange != 1f ||
-                            panChange != Offset.Zero
-                        ) {
-                            onGesture(
-                                centroid,
-                                panChange,
-                                zoomChange,
-                                effectiveRotation,
-                                pointer,
-                                event.changes
-                            )
-                        }
-
-                        if (consume) {
-                            event.changes.forEach {
-                                if (it.positionChanged()) {
-                                    it.consume()
-                                }
+                    if (consume) {
+                        event.changes.forEach {
+                            if (it.positionChanged()) {
+                                it.consume()
                             }
                         }
                     }
                 }
-            } while (!canceled && event.changes.any { it.pressed })
-
-            if (gestureStarted) {
-                onGestureEnd(pointer)
-            } else {
-                onGestureCancel()
             }
+        } while (!canceled && event.changes.any { it.pressed })
+
+        if (gestureStarted) {
+            onGestureEnd(pointer)
+        } else {
+            onGestureCancel()
         }
     }
 }
